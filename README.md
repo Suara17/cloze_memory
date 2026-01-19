@@ -31,6 +31,11 @@
 - ✅ **答案检查**：实时检查填空答案并显示正确率
 - 🎨 **简约设计**：采用Material Design 3风格，界面简洁优雅
 
+界面展示：
+<img width="1584" height="892" alt="image" src="https://github.com/user-attachments/assets/622388b6-0965-4de2-aab9-f6d66db3e851" />
+<img width="1582" height="853" alt="image" src="https://github.com/user-attachments/assets/0dfec631-063e-446c-9d80-5ab15b08ad40" />
+
+
 ## 技术栈
 
 - Flutter 3.0+
