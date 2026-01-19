@@ -1,0 +1,333 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  Eraser, 
+  PenTool, 
+  Image as ImageIcon, 
+  Eye, 
+  EyeOff, 
+  RotateCcw, 
+  Check, 
+  Sparkles,
+  BookOpen,
+  Upload
+} from 'lucide-react';
+
+// 模拟贴纸数据
+const STICKERS = [
+  { id: 1, content: "💯", top: "5%", left: "85%", rotate: "12deg" },
+  { id: 2, content: "🌟", top: "85%", left: "5%", rotate: "-10deg" },
+  { id: 3, content: "📚", top: "10%", left: "5%", rotate: "-5deg" },
+];
+
+// 默认示例文本
+const DEFAULT_TEXT = `春江潮水连海平，海上明月共潮生。
+滟滟随波千万里，何处春江无月明！
+江流宛转绕芳甸，月照花林皆似霰；
+空里流霜不觉飞，汀上白沙看不见。`;
+
+const App = () => {
+  const [text, setText] = useState(DEFAULT_TEXT);
+  const [tokens, setTokens] = useState([]);
+  const [mode, setMode] = useState('edit'); // 'edit' (输入), 'prepare' (选词), 'study' (背诵)
+  const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  // 初始化或文本变更时，将文本分割为 Token
+  // 这里做一个简单的分词处理：保留换行符，将中文字符单独分开，英文单词保持完整
+  const processText = (inputText) => {
+    // 正则：匹配换行符 | 英文单词 | 单个中文字符/标点
+    const regex = /(\n|[a-zA-Z0-9]+|[\u4e00-\u9fa5]|[^\s\w])/g;
+    const parts = inputText.match(regex) || [];
+    
+    return parts.map((part, index) => ({
+      id: index,
+      content: part,
+      isHidden: false, // 是否被挖空
+      isRevealed: false, // 背诵模式下是否已查看
+      isNewLine: part === '\n'
+    }));
+  };
+
+  // 当进入准备模式时，处理文本
+  const handleStartPrepare = () => {
+    const processed = processText(text);
+    setTokens(processed);
+    setMode('prepare');
+  };
+
+  // 智能挖空 (随机隐藏 30% 的非标点内容)
+  const handleAutoMask = () => {
+    const newTokens = tokens.map(token => {
+      // 不隐藏换行符和常见标点
+      if (token.isNewLine || /[,.!?;:，。！？；：]/.test(token.content)) {
+        return token;
+      }
+      return {
+        ...token,
+        isHidden: Math.random() > 0.6 // 40% 概率被隐藏
+      };
+    });
+    setTokens(newTokens);
+  };
+
+  // 手动点击 Token 切换隐藏状态 (准备模式)
+  const toggleTokenMask = (id) => {
+    if (mode !== 'prepare') return;
+    setTokens(tokens.map(t => 
+      t.id === id ? { ...t, isHidden: !t.isHidden } : t
+    ));
+  };
+
+  // 点击遮罩显示/隐藏答案 (背诵模式)
+  const toggleReveal = (id) => {
+    if (mode !== 'study') return;
+    setTokens(tokens.map(t => 
+      t.id === id ? { ...t, isRevealed: !t.isRevealed } : t
+    ));
+  };
+
+  // 模拟图片上传解析
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setIsLoading(true);
+      // 模拟 OCR 延迟
+      setTimeout(() => {
+        setText(`[图片解析结果]\n\n细胞呼吸（cellular respiration）是指有机物在细胞内经过一系列的氧化分解，生成二氧化碳或其他产物，释放出能量并生成ATP的过程。\n\n分为有氧呼吸和无氧呼吸。`);
+        setIsLoading(false);
+        setMode('edit');
+      }, 1500);
+    }
+  };
+
+  // 渲染主内容区域
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-white/80 animate-pulse">
+          <Sparkles className="w-12 h-12 mb-4 text-yellow-300 animate-spin-slow" />
+          <p className="text-xl font-handwriting">正在施展魔法解析图片...</p>
+        </div>
+      );
+    }
+
+    if (mode === 'edit') {
+      return (
+        <textarea
+          className="w-full h-full bg-transparent border-none resize-none text-white/90 text-xl font-handwriting focus:ring-0 placeholder-white/30 leading-loose"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="在这里输入想要背诵的文字，或者粘贴内容..."
+          spellCheck={false}
+        />
+      );
+    }
+
+    return (
+      <div className="w-full h-full overflow-y-auto pr-2 leading-loose text-xl font-handwriting text-white/90 flex flex-wrap content-start items-center">
+        {tokens.map((token) => {
+          if (token.isNewLine) {
+            return <div key={token.id} className="w-full h-4 basis-full"></div>;
+          }
+
+          const isMasked = token.isHidden;
+          
+          if (mode === 'prepare') {
+            return (
+              <span
+                key={token.id}
+                onClick={() => toggleTokenMask(token.id)}
+                className={`cursor-pointer transition-all duration-200 px-1 rounded mx-0.5 select-none
+                  ${isMasked 
+                    ? 'bg-orange-200/20 text-orange-200 line-through decoration-2' 
+                    : 'hover:bg-white/10'}`}
+              >
+                {token.content}
+              </span>
+            );
+          }
+
+          // Study Mode
+          if (isMasked) {
+            return (
+              <span
+                key={token.id}
+                onClick={() => toggleReveal(token.id)}
+                className={`cursor-pointer mx-1 inline-flex items-center justify-center min-w-[1.5em] h-[1.5em] rounded px-1 select-none transition-all duration-300
+                  ${token.isRevealed 
+                    ? 'bg-transparent text-yellow-300 font-bold border-b-2 border-yellow-300/50' 
+                    : 'bg-orange-200 text-transparent shadow-inner transform hover:scale-105 active:scale-95'}`}
+              >
+                {token.content}
+              </span>
+            );
+          }
+
+          return <span key={token.id} className="mx-0.5">{token.content}</span>;
+        })}
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-stone-100 flex items-center justify-center p-4 md:p-8 font-sans">
+      
+      {/* 教室背景容器 */}
+      <div className="relative w-full max-w-4xl bg-[#2F4F4F] rounded-xl shadow-2xl border-[12px] border-[#8B4513] overflow-hidden flex flex-col"
+           style={{ boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+        
+        {/* 顶部黑板槽装饰 */}
+        <div className="absolute top-0 left-0 right-0 h-2 bg-black/20 shadow-inner z-10"></div>
+        
+        {/* 贴纸装饰 */}
+        {STICKERS.map(sticker => (
+          <div 
+            key={sticker.id}
+            className="absolute z-0 pointer-events-none text-4xl opacity-80 filter drop-shadow-lg"
+            style={{ 
+              top: sticker.top, 
+              left: sticker.left, 
+              transform: `rotate(${sticker.rotate})` 
+            }}
+          >
+            {sticker.content}
+          </div>
+        ))}
+
+        {/* 顶部栏 */}
+        <header className="relative z-10 bg-[#1a3333] p-4 flex justify-between items-center border-b border-white/10">
+          <div className="flex items-center space-x-2 text-white/90">
+            <BookOpen className="w-6 h-6" />
+            <h1 className="text-xl font-bold tracking-wider">记忆小教室</h1>
+          </div>
+          
+          <div className="flex space-x-2">
+            {mode === 'edit' && (
+              <>
+                <button 
+                  onClick={() => fileInputRef.current.click()}
+                  className="flex items-center px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm transition-colors"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  导入图片
+                </button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                />
+                <button 
+                  onClick={handleStartPrepare}
+                  className="flex items-center px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm font-medium transition-colors shadow-lg"
+                >
+                  去挖空 <PenTool className="w-4 h-4 ml-2" />
+                </button>
+              </>
+            )}
+
+            {mode === 'prepare' && (
+              <>
+                <button 
+                  onClick={handleAutoMask}
+                  className="flex items-center px-3 py-1.5 bg-yellow-600/80 hover:bg-yellow-500/80 text-white rounded-lg text-sm transition-colors"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" /> 随机挖空
+                </button>
+                <button 
+                  onClick={() => setTokens(tokens.map(t => ({...t, isHidden: false})))}
+                  className="flex items-center px-3 py-1.5 bg-red-500/60 hover:bg-red-500/80 text-white rounded-lg text-sm transition-colors"
+                >
+                  <Eraser className="w-4 h-4 mr-2" /> 重置
+                </button>
+                <button 
+                  onClick={() => setMode('study')}
+                  className="flex items-center px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition-colors shadow-lg"
+                >
+                  开始背诵 <Check className="w-4 h-4 ml-2" />
+                </button>
+              </>
+            )}
+
+            {mode === 'study' && (
+              <button 
+                onClick={() => setMode('prepare')}
+                className="flex items-center px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm transition-colors"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" /> 返回调整
+              </button>
+            )}
+          </div>
+        </header>
+
+        {/* 主内容区域 (黑板面) */}
+        <main className="flex-1 relative z-10 p-6 md:p-10 min-h-[400px]">
+          {/* 状态提示文字 */}
+          <div className="absolute top-2 left-0 right-0 text-center pointer-events-none">
+             <span className="bg-black/30 text-white/60 px-3 py-1 rounded-full text-xs backdrop-blur-sm">
+                {mode === 'edit' && "第 1 步：输入或导入内容"}
+                {mode === 'prepare' && "第 2 步：点击文字进行挖空，或使用随机功能"}
+                {mode === 'study' && "第 3 步：点击遮罩块查看答案"}
+             </span>
+          </div>
+
+          <div className="h-full w-full bg-transparent outline-none">
+            {renderContent()}
+          </div>
+        </main>
+
+        {/* 底部粉笔槽 */}
+        <div className="h-12 bg-[#3d2b1f] border-t border-[#2a1d15] flex items-center px-6 shadow-inner relative z-20">
+            {/* 粉笔装饰 */}
+            <div className="w-16 h-2 bg-white rounded-full shadow-sm transform rotate-3 opacity-90 mr-4"></div>
+            <div className="w-10 h-2 bg-yellow-200 rounded-full shadow-sm transform -rotate-6 opacity-90 mr-4"></div>
+            <div className="w-8 h-2 bg-pink-200 rounded-full shadow-sm transform rotate-12 opacity-90"></div>
+            
+            {/* 黑板擦 */}
+            <div className="ml-auto w-24 h-6 bg-[#2a1d15] rounded-sm relative shadow-lg transform -rotate-2 cursor-pointer hover:-translate-y-1 transition-transform" 
+                 onClick={() => {
+                   if(window.confirm('要清空黑板重新开始吗？')) {
+                     setText('');
+                     setMode('edit');
+                   }
+                 }}>
+                <div className="absolute top-0 left-0 right-0 h-3 bg-gray-300 rounded-t-sm opacity-50"></div>
+                <div className="absolute inset-0 flex items-center justify-center text-[10px] text-white/30 tracking-widest">
+                  CLEANER
+                </div>
+            </div>
+        </div>
+      </div>
+      
+      <style>{`
+        .font-handwriting {
+          font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif;
+        }
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 3s linear infinite;
+        }
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05); 
+        }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2); 
+          border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3); 
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default App;
