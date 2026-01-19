@@ -2,6 +2,27 @@
 
 一个简约优雅的Flutter应用，帮助用户通过挖空填空的方式进行记忆学习。
 
+## 🚀 快速开始（推荐）
+
+### 一键下载使用
+
+**无需安装任何开发环境，下载即可使用！**
+
+1. **下载安装包**
+   - 访问 [Releases 页面](https://github.com/Suara17/cloze_memory/releases)
+   - 下载最新版本的 `cloze_memory_app_portable.zip`
+
+2. **解压运行**
+   - 解压zip文件到任意目录
+   - 双击 `cloze_memory_app.exe` 即可运行
+
+3. **系统要求**
+   - Windows 10 或更高版本
+   - 无需安装Flutter或任何开发工具
+   - 解压后约 26MB 磁盘空间
+
+---
+
 ## 功能特点
 
 - 📝 **文本输入**：直接输入需要背诵的文本内容
@@ -17,80 +38,32 @@
 - File Picker (文件选择)
 - Shared Preferences (数据持久化)
 
-## 安装和运行
+---
 
-### 环境要求
-- Windows 10 或更高版本
-- 至少 8GB RAM
-- 至少 2GB 可用磁盘空间（安装在E盘）
+## 💻 开发者模式
 
-### 安装步骤
+如果你想自己编译和修改代码，请按照以下步骤操作：
 
-#### 1. 运行自动安装脚本（推荐）
-双击运行 `install_environment.bat` 文件，它会指导您完成所有安装步骤。
+### 安装和运行
 
-#### 2. 手动安装Flutter SDK到E盘
-```cmd
-# 创建Flutter目录
-mkdir E:\flutter
-
-# 下载Flutter SDK (替换为最新版本链接)
-# 从 https://flutter.dev/docs/get-started/install/windows 下载zip文件
-# 解压到 E:\flutter\flutter
-
-# 或者使用Git克隆（推荐）
-cd /d E:\flutter
-git clone https://github.com/flutter/flutter.git -b stable
-```
-
-#### 3. 手动安装Android SDK到E盘
-```cmd
-# 创建Android SDK目录
-mkdir E:\Android\Sdk
-
-# 下载Android Command Line Tools
-# 从 https://developer.android.com/studio#command-tools 下载
-# 解压到 E:\Android\Sdk\cmdline-tools\latest
-```
-
-#### 3. 配置环境变量
-将以下路径添加到系统PATH环境变量：
-- `E:\flutter\flutter\bin`
-- `E:\Android\Sdk\platform-tools`
-- `E:\Android\Sdk\tools\bin`
-
-#### 4. 配置Flutter
 ```bash
-# 运行flutter doctor检查环境
-flutter doctor --android-licenses
-flutter doctor
-```
+# 克隆仓库
+git clone https://github.com/Suara17/cloze_memory.git
+cd cloze_memory/cloze_memory_app
 
-#### 5. 运行项目
-```bash
-cd /d E:\flutter_app
+# 获取依赖
 flutter pub get
-flutter run
+
+# 运行应用
+flutter run -d windows
 ```
 
-或者双击 `run.bat` 文件自动执行上述步骤。
-
-### 快速开始
-1. 双击 `check_setup.bat` 检查环境配置
-2. 如果检查失败，双击 `install_environment.bat` 或 `setup_environment.ps1` 安装所需工具
-3. **桌面版本**: 安装Visual Studio后，双击 `run_desktop.bat`
-4. **网页版本**: 双击 `launch.bat` 选择Chrome浏览器
-
-### 注意事项
-- 所有脚本现已修复编码问题，支持中文显示
-- 如果批处理文件仍有乱码，可以使用 PowerShell 脚本 `setup_environment.ps1`
-- 所有开发工具都安装在E盘，不会占用C盘空间
+详细的环境配置和开发指南请参考:
+- [手动安装指南](MANUAL_SETUP.md)
+- [VS安装指南](VS_INSTALL_GUIDE.md)
+- [Windows打包指南](WINDOWS_PACKAGING_GUIDE.md)
 
 ## 使用方法
-
-### 运行应用
-1. **开发模式**：双击 `run_desktop.bat` 或运行 `flutter run -d windows`
-2. **网页版本**：双击 `launch.bat` 并选择选项2
 
 ### 应用功能
 应用采用三步流程设计，模拟教室黑板的学习环境：
