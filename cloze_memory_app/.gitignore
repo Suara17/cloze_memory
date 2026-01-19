@@ -43,14 +43,17 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/local.properties
+/android/.gradle/
 
 # Package and installer files
 *.zip
 *.exe
 *.msi
 
-# Windows batch scripts (keep only if needed for users)
-# *.bat
+# Windows batch scripts (development tools, not needed for users)
+*.bat
+*.ps1
 
 # Build output directories
 /build/
